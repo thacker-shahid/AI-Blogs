@@ -1,5 +1,5 @@
 const express = require('express');
-const { CURSOR_FLAGS } = require('mongodb');
+// const { CURSOR_FLAGS } = require('mongodb');
 const router = express.Router();
 const Comment = require('../models/comments.model')
 

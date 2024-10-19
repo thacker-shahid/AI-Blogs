@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user.model')
 const generateToken = require('../middleware/generateToken');
-
+// const session = require('express-session');
 
 // Register a new user
 router.post('/register', async(req, res)=>{
@@ -45,15 +45,17 @@ router.post('/login', async (req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: true,
-            sameSite: true
+            sameSite: 'None'
         })
-
+        // req.session.token = token;
+        // console.log('Cookie set: ', token);
+        // localStorage.setItem('token', token)
 
         res.send({ message: 'Logged in successfully!', token, user: {
             _id: user._id,
             username: user.username,
             email: user.email,
-            role: user.role
+            role: user.role,
         }});
 
     } catch(error){

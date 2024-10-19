@@ -5,12 +5,23 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose');
 const cors = require('cors');
+// const cookieParser = require("cookie-parser");
+// const bodyParser = require('body-parser');
 require('dotenv').config();
 const port = process.env.PORT || 5000
 
 // Parser options
+// app.use(cookieParser());
+// app.use(express.urlencoded({ extended: true }));  // parse application/x-www-form-urlencoded
+
 app.use(express.json())
-app.use(cors())
+// app.use(bodyParser.json({limit: '10mb'}));
+// app.use(bodyParser.urlencoded({limit: '10mb', extended: true}));
+app.use(cors({
+  origin: 'http://127.0.0.1:5173',
+  // origin: 'http://localhost:5173',
+  credentials: true
+}))
 
 // Establish the connection
 mongoose.connect(process.env.MONGODB_URL).then(() => {

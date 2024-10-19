@@ -5,11 +5,14 @@ const Comment = require('../models/comments.model')
 const verifyToken = require('../middleware/verifyToken') 
 const isAdmin = require('../middleware/isAdmin') 
 
+const { createProxyMiddleware } = require("http-proxy-middleware");
+
 // Create a Post
-router.post('/create-post', verifyToken, isAdmin, async (req, res)=>{
+// router.post('/create-post', verifyToken, isAdmin, async (req, res)=>{
+router.post('/create-post', async (req, res)=>{
     try{
-        // console.log(req.body);
-        const newPost = new Blog({...req.body, author: req.userId})
+        // const newPost = new Blog({...req.body, author: req.userId})
+        const newPost = new Blog({...req.body})
         await newPost.save();
         res.status(201).send({
             message: "Post created successfully",
@@ -51,11 +54,8 @@ router.get('/', async (req, res) => {
             }
         }
 
-        const allPosts = await Blog.find(query).populate('author', 'email').sort({createdAt: -1});
-        res.status(200).send({
-            message: "Blogs retrieved successfully!",
-            post: allPosts
-        }) 
+        const posts = await Blog.find(query).populate('author', 'email').sort({createdAt: -1});
+        res.status(200).send(posts) 
     } catch(error){
         console.error("Some error in fetching posts", error);
         res.status(500).send({Message: "Cannot fetch posts due to some errors!"})
@@ -69,17 +69,19 @@ router.get('/:id', async (req, res)=>{
         const postId = req.params.id;
         const postwithId = await Blog.findById(postId);
 
+        
+        const comments = await Comment.find({postId}).populate('user', 'username email');
         if(!postwithId){
             res.status(404).send({message: "No post found with given Id"})
         } else {
             res.status(200).send({
+                // postwithId, comments
                 message: "Post with given Id found successfully!",
-                post: postwithId
+                post: postwithId,
+                comments: comments
             })
+            return
         }
-
-        const comment = new Comment.find({postId: postId}).populate('user', 'username email');
-
     } catch(error){
         console.error("Some error in fetching single post by id", error);
         res.status(500).send({Message: "Cannot fetch single post by id due to some errors!"})
@@ -87,7 +89,8 @@ router.get('/:id', async (req, res)=>{
 })
 
 // Update the post with id
-router.patch('/update-post/:id',verifyToken, async (req, res) => {
+// router.patch('/update-post/:id',verifyToken, async (req, res) => {
+router.patch('/update-post/:id', async (req, res) => {
     try {
         const postId = req.params.id;
         const updatedPost = req.body;
@@ -109,7 +112,8 @@ router.patch('/update-post/:id',verifyToken, async (req, res) => {
 })
 
 // Delete a single post
-router.delete('/:id',verifyToken, async (req, res)=>{
+// router.delete('/:id',verifyToken, async (req, res)=>{
+router.delete('/:id', async (req, res)=>{
     try{
         const postId = req.params.id;
         const postToDelete = await Blog.findByIdAndDelete(postId);
@@ -147,19 +151,17 @@ router.get('/related/:id', async(req, res) => {
         }
 
         const titleRegex = new RegExp(currentPost.title.split(" ").join("|"), "i");
-        const contentRegex = new RegExp(currentPost.content.split(" ").join("|"), "i");
+        // const contentRegex = new RegExp(currentPost.content.split(" ").join("|"), "i");
 
         const relatedPosts = await Blog.find({ 
             _id: {$ne: id}, //Exclude the currentPost
             title: {$regex: titleRegex},
-            content: {$regex: contentRegex}
+            // content: {$regex: contentRegex}
         })
 
         if(relatedPosts){
-            res.status(200).send({
-                message: "Related posts retrieved successfully!",
-                relatedPosts
-            })
+            res.status(200).send(relatedPosts)
+            return;
         } else {
             res.status(404).send({message: "No related posts found!"})
         }
