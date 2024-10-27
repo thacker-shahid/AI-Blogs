@@ -9,7 +9,6 @@ const cors = require('cors');
 // const bodyParser = require('body-parser');
 require('dotenv').config();
 const port = process.env.PORT || 5000
-
 // Parser options
 // app.use(cookieParser());
 // app.use(express.urlencoded({ extended: true }));  // parse application/x-www-form-urlencoded

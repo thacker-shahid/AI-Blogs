@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -19,9 +20,11 @@
     "express-session": "^1.18.1",
     "http-proxy-middleware": "^3.0.3",
     "jsonwebtoken": "^9.0.2",
+    "mailtrap": "^3.4.0",
     "mongodb": "^6.9.0",
     "mongoose": "^8.6.3",
     "node-localstorage": "^3.0.5",
+    "nodemailer": "^6.9.15",
     "passport-google-oauth20": "^2.0.0"
   }
 }
