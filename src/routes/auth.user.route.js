@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/user.model')
-const generateTokenAndSetCookie = require('../middleware/generateTokenAndSetCookie');
+const generateToken = require('../middleware/generateToken');
 const { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail, sendResetSuccessEmail } = require('../mailtrap/emails');
-// const session = require('express-session');
 require('dotenv').config();
 const crypto = require("crypto");
 const bcryptjs = require("bcryptjs");
+const bcrypt = require('bcrypt');
 
 // Register a new user
 router.post('/register', async (req, res) => {
@@ -22,24 +22,29 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ success: false, message: "User already exists" });
         }
 
+        const hashedPassword = await bcryptjs.hash(password, 10);
         const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
 
         const user = new User({
             username,
-            password,
+            password: hashedPassword,
             email,
             verificationToken,
             verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000,
         });
 
-        // if (user) {
         await user.save();
-        generateTokenAndSetCookie(res, user._id);
+        const token = await generateToken(res, user._id);
+
+        res.cookie('token', token, {
+            httpOnly: true, // this prevents from XSS attacks
+            secure: true,
+            sameSite: 'strict', // this prevents from csrf attacks
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        })
         await sendVerificationEmail(user.email, verificationToken);
-        res.status(201).send({ message: 'User registered successfully!', user: user });
-        // } else {
-        //     return res.status(400).send({ message: 'Invalid user data!' });
-        // }
+        res.status(201).send({ message: 'User registered successfully!', user: user, token: token });
+
     } catch (error) {
         console.error('Error registering new user', error);
         return res.status(500).send({ message: 'Cannot register new user due to some errors!' });
@@ -62,6 +67,7 @@ router.post('/verify-email', async (req, res) => {
         user.isVerified = true;
         user.verificationToken = undefined;
         user.verificationTokenExpiresAt = undefined;
+
         await user.save();
 
         await sendWelcomeEmail(user.email, user.username);
@@ -74,52 +80,6 @@ router.post('/verify-email', async (req, res) => {
     } catch (error) {
         console.log("error in verifyEmail ", error);
         res.status(500).json({ message: "Server error" });
-    }
-});
-
-// Login a user
-router.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        const user = await User.findOne({ email });
-
-        if (!user)
-            return res.status(404).send({ message: 'User not found!' });
-
-        const isMatch = await user.comparePassword(password, user.password);
-
-        if (!isMatch)
-            return res.status(401).send({ message: 'Invalid username or password!' });
-
-
-        // Generate and send JWT token
-        // const token = await generateTokenAndSetCookie(res, user._id);
-        const token = await generateTokenAndSetCookie(res, user._id);
-        user.lastLogin = new Date();
-        await user.save();
-
-        // res.cookie('token', token, {
-        //     httpOnly: true,
-        //     secure: true,
-        //     sameSite: 'None'
-        // })
-        // req.session.token = token;
-        // console.log('Cookie set: ', token);
-        // localStorage.setItem('token', token)
-
-        res.send({
-            message: 'Logged in successfully!', token, user: {
-                _id: user._id,
-                username: user.username,
-                email: user.email,
-                role: user.role,
-            }
-        });
-
-    } catch (error) {
-        console.error('Error logging in user', error);
-        res.status(500).send({ message: 'Cannot login user due to some errors!' });
     }
 });
 
@@ -143,9 +103,9 @@ router.post('/forgot-password', async (req, res) => {
         await user.save();
 
         // send email
-        await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
+        await sendPasswordResetEmail(user.email, `http://127.0.0.1:5173/reset-password/${resetToken}`);
 
-        res.status(200).json({ success: true, message: "Password reset link sent to your email" });
+        res.status(200).json({ success: true, resetToken: resetToken, message: "Password reset link sent to your email" });
     } catch (error) {
         console.log("Error in forgotPassword ", error);
         res.status(400).json({ success: false, message: error.message });
@@ -168,7 +128,7 @@ router.post('/reset-password/:token', async (req, res) => {
         }
 
         // update password
-        const hashedPassword = await bcryptjs.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         user.password = hashedPassword;
         user.resetPasswordToken = undefined;
@@ -182,6 +142,50 @@ router.post('/reset-password/:token', async (req, res) => {
     } catch (error) {
         console.log("Error in resetPassword ", error);
         res.status(400).json({ success: false, message: error.message });
+    }
+});
+
+// Login a user
+router.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        const user = await User.findOne({ email });
+
+        if (!user)
+            return res.status(404).send({ message: 'User not found!' });
+
+        // const isMatch = await user.comparePassword(password, user.password);
+        const isPasswordValid = await bcryptjs.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ success: false, message: "Invalid credentials" });
+        }
+
+        // Generate and send JWT token
+        const token = await generateToken(res, user._id);
+        user.lastLogin = new Date();
+
+        await user.save();
+
+        res.cookie('token', token, {
+            httpOnly: true, // this prevents from XSS attacks
+            secure: true,
+            sameSite: 'strict', // this prevents from csrf attacks
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        })
+
+        res.send({
+            message: 'Logged in successfully!', token, user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+            }
+        });
+
+    } catch (error) {
+        console.error('Error logging in user', error);
+        res.status(500).send({ message: 'Cannot login user due to some errors!' });
     }
 });
 
