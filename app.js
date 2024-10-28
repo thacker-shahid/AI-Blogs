@@ -32,10 +32,12 @@ mongoose.connect(process.env.MONGODB_URL).then(() => {
 const blogRoutes = require('./src/routes/blog.route')
 const commentRoutes = require('./src/routes/comment.route')
 const userRoutes = require('./src/routes/auth.user.route')
+const contactUsRoutes = require('./src/routes/contactUs.route')
 
 app.use("/api/auth", userRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/contact-us", contactUsRoutes);
 
 // Listening at Port 1000 
 app.listen(port, () => {
