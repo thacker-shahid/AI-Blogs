@@ -204,7 +204,7 @@ router.post('/logout', async (req, res) => {
 router.get('/users', async (req, res) => {
     try {
 
-        const users = await User.find({}, 'id email role');
+        const users = await User.find({}, 'id email role lastLogin');
         res.status(200).send({ message: "Users found successfully!", users });
 
     } catch (error) {
