@@ -17,7 +17,7 @@ app.use(express.json())
 // app.use(bodyParser.urlencoded({limit: '10mb', extended: true}));
 app.use(cors({
   // origin: 'http://127.0.0.1:5173',
-  origin: 'https://ai-blogs-frontend.vercel.app',
+  origin: ['https://ai-blogs-frontend.vercel.app', 'https://www.trendinglobes.com'],
   // origin: 'http://localhost:5173',
   credentials: true
 }))
