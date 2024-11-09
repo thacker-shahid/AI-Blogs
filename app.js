@@ -16,7 +16,8 @@ app.use(express.json())
 // app.use(bodyParser.urlencoded({limit: '10mb', extended: true}));
 app.use(cors(
   {
-    origin: ['http://127.0.0.1:5173', 'https://trendingblogs.onrender.com'],
+    // origin: ['http://127.0.0.1:5173', 'https://trendingblogs.onrender.com'],
+    origin: process.env.CLEINT_URL,
     credentials: true
   }
 ))
