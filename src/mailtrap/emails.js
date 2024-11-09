@@ -1,5 +1,4 @@
 const { PASSWORD_RESET_REQUEST_TEMPLATE, PASSWORD_RESET_SUCCESS_TEMPLATE, VERIFICATION_EMAIL_TEMPLATE } = require('./emailTemplates.js');
-
 const { mailtrapClient, sender } = require('./mailtrap.config.js');
 
 const sendVerificationEmail = async (email, verificationToken) => {
@@ -14,8 +13,7 @@ const sendVerificationEmail = async (email, verificationToken) => {
             category: "Email Verification",
         });
 
-        console.log("Email sent successfully", response);
-        // return response;
+        console.log("Email Verifcation email sent successfully", response);
     } catch (error) {
         console.error(`Error sending verification`, error);
         throw new Error(`Error sending verification email: ${error}`);
@@ -29,18 +27,16 @@ const sendWelcomeEmail = async (email, name) => {
         const response = await mailtrapClient.send({
             from: sender,
             to: recipient,
-            template_uuid: "0ecfadd8-6906-4459-854e-382d0ce2370a",
+            template_uuid: "0ed9aadf-7b68-4c20-a12c-fc4251df672d",
             template_variables: {
-                company_info_name: "AI Blogs",
+                company_info_name: "Technical Blogs",
                 name: name,
             },
         });
 
         console.log("Welcome email sent successfully", response);
-        // return;
     } catch (error) {
         console.error(`Error sending welcome email`, error);
-
         throw new Error(`Error sending welcome email: ${error}`);
     }
 };
@@ -56,7 +52,7 @@ const sendPasswordResetEmail = async (email, resetURL) => {
             html: PASSWORD_RESET_REQUEST_TEMPLATE.replace("{resetURL}", resetURL),
             category: "Password Reset",
         });
-        // return;
+        console.log("Password Reset email sent successfully", response);
     } catch (error) {
         console.error(`Error sending password reset email`, error);
 
@@ -76,17 +72,14 @@ const sendResetSuccessEmail = async (email) => {
             category: "Password Reset",
         });
 
-        console.log("Password reset email sent successfully", response);
-        // return;
+        console.log("Password reset success email sent successfully", response);
     } catch (error) {
         console.error(`Error sending password reset success email`, error);
-
         throw new Error(`Error sending password reset success email: ${error}`);
     }
 };
 
 const sendContactUsEmail = async (name, email, message) => {
-
     const recipient = [{ email }];
 
     try {
@@ -130,10 +123,9 @@ const sendContactUsEmail = async (name, email, message) => {
                 </html>
             `,
         });
-        // return;
+        console.log("Contact Us email sent successfully", response);
     } catch (error) {
         console.error(`Error sending contact us`, error);
-
         throw new Error(`Error sending contact us: ${error}`);
     }
 };
