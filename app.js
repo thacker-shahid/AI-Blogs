@@ -3,20 +3,19 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose');
 const cors = require('cors');
-// const cookieParser = require("cookie-parser");
-// const bodyParser = require('body-parser');
+const cookieParser = require("cookie-parser");
+const bodyParser = require('body-parser');
 require('dotenv').config();
 const port = process.env.PORT || 5000
 
 // Parser options
-// app.use(cookieParser());
-// app.use(express.urlencoded({ extended: true }));  // parse application/x-www-form-urlencoded
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));  // parse application/x-www-form-urlencoded
 
 app.use(express.json())
-// app.use(bodyParser.urlencoded({limit: '10mb', extended: true}));
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use(cors(
   {
-    // origin: ['http://127.0.0.1:5173', 'https://trendingblogs.onrender.com'],
     origin: process.env.CLEINT_URL,
     credentials: true
   }

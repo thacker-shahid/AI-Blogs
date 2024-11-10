@@ -103,7 +103,7 @@ router.post('/forgot-password', async (req, res) => {
         await user.save();
 
         // send email
-        await sendPasswordResetEmail(user.email, `http://127.0.0.1:5173/reset-password/${resetToken}`);
+        await sendPasswordResetEmail(user.email, `${process.env.CLEINT_URL}/reset-password/${resetToken}`);
 
         res.status(200).json({ success: true, resetToken: resetToken, message: "Password reset link sent to your email" });
     } catch (error) {

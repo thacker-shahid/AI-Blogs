@@ -1,14 +1,17 @@
-const { MailtrapClient } = require("mailtrap");
 require('dotenv').config();
+const nodemailer = require('nodemailer');
 
-const mailtrapClient = new MailtrapClient({
-    token: process.env.MAILTRAP_TOKEN,
+const mailtrapClient = nodemailer.createTransport({
+    service: "gmail",
+    secure: true,
+    port: 465,
+    auth: {
+        user: process.env.SENDER_EMAIL,
+        pass: process.env.EMAIL_PASS
+    }
 });
 
-const sender = {
-    email: "hello@demomailtrap.com",
-    name: "Mailtrap Test",
-};
+const sender = process.env.SENDER_EMAIL;
 
 module.exports = {
     mailtrapClient,
